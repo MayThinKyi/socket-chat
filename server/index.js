@@ -20,6 +20,9 @@ io.on('connection',(socket)=>{
     })
     socket.on('send_msg',(data)=>{
         socket.to(data.room).emit('receive_msg',data)
+    });
+    socket.on('typing',(data)=>{
+        socket.to(data.room).emit('typing',data.name)
     })
 
     socket.on('disconnect',()=>{

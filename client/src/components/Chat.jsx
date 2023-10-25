@@ -4,7 +4,9 @@ import ScrollToBottom from 'react-scroll-to-bottom';
 
 const Chat = ({socket,userInfo}) => {
     const [message,setMessage]=useState('');
-    const [messageList,setMessageList]=useState([])
+    const [messageList,setMessageList]=useState([]);
+    const [isTyping,setIsTyping]=useState(false);
+    const [typingUser,setTypingUser]=useState('');
     const sendMsgHandler=()=>{
         const msgInfo={
             msg:message,
@@ -16,9 +18,18 @@ const Chat = ({socket,userInfo}) => {
         setMessageList((msgList)=>[...msgList,msgInfo])
         setMessage('')
     }
+    const handleKeyPress=(e)=>{
+      socket.emit('typing',userInfo)
+    }
     useEffect(()=>{
         socket.on('receive_msg',(data)=>{
             setMessageList((msgList)=>[...msgList,data])
+        })
+        socket.on('typing',(data)=>{
+          setTypingUser(data)
+          setIsTyping(true);
+          setTimeout(()=>setIsTyping(false),3000)
+
         })
     },[socket])
   return (
@@ -31,10 +42,12 @@ const Chat = ({socket,userInfo}) => {
             <p className='text-[14px] font-[500]'>{m?.time} {m?.name}</p>
         </div>
       })}
+            {isTyping && <p className='flex justify-start w-full p-2 text-[15px]'>{typingUser} is typing...</p>}
+
       </ScrollToBottom>
-      <div className="w-full flex items-center border-t border-slate-400  rounded-b-lg m-0">
-        <input className='outline-none w-[80%] px-4 py-4  border-r border-slate-400'  placeholder='Message...' value={message} onChange={(e)=>setMessage(e.target.value)} />
-        <button className='px-4 py-4 text-center mx-auto' onClick={sendMsgHandler}> 🚀 </button>
+      <div className="flex items-center w-full m-0 border-t rounded-b-lg border-slate-400">
+        <input  className='outline-none w-[80%] px-4 py-4  border-r border-slate-400'  placeholder='Message...' value={message} onChange={(e)=>setMessage(e.target.value)} onKeyPress={handleKeyPress} />
+        <button className='px-4 py-4 mx-auto text-center' onClick={sendMsgHandler}> 🚀 </button>
       </div>
     </div>
   )
